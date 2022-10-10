@@ -1,8 +1,10 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from Docker import *
-from gi.repository import Gtk, Gdk, Gio
+import requests
+from gi.repository import Gtk, Gdk, Gio, GLib
 import locale
+import pwd
 import os
 from locale import gettext as _
 import locale
@@ -41,6 +43,35 @@ class MainWindow:
         self.volume_btn.connect("clicked", self.show_volume)
         self.show_container(self.container_btn)
         self.window.show_all()
+        self.check_docker_available()
+
+    def check_docker_available(self):
+        def install(widget=None):
+            self.builder.get_object("dialog_docker_install").hide()
+            user = pwd.getpwuid(os.getuid())[0]
+            res = requests.get("https://get.docker.com/rootless")
+            with open("/tmp/rootless-init.sh","w") as f:
+                f.write("""
+                    if ! grep """+user+""": /etc/subgid ; then
+                        usermod --add-subgids 1002000000-1002999999 """+user+"""
+                    fi
+                    if ! grep """+user+""": /etc/subuid ; then
+                        usermod --add-subuids 1002000000-1002999999 """+user+"""
+                    fi
+                """)
+            os.system("pkexec bash -xe /tmp/rootless-init.sh")
+            with open("/tmp/rootless.sh","w") as f:
+                f.write(res.content.decode("utf-8"))
+            os.system("bash /tmp/rootless.sh")
+            self.window.show_all()
+        def call_install(a):
+            GLib.idle_add(install)
+        self.builder.get_object("install_docker").connect("clicked",call_install)
+        self.builder.get_object("install_cancel").connect("clicked",Gtk.main_quit)
+        if not self.docker.available:
+            self.window.hide()
+            self.builder.get_object("dialog_docker_install").show_all()
+                
 
     def define_components(self):
         # stacks
