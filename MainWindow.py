@@ -1,11 +1,12 @@
+import gi
+gi.require_version("Gtk", "3.0")
 from Docker import *
 from gi.repository import Gtk, Gdk, Gio
 import locale
 import os
 from locale import gettext as _
 import locale
-import gi
-gi.require_version("Gtk", "3.0")
+
 
 # Translation Constants:
 APPNAME = "docker-gui"
@@ -37,6 +38,8 @@ class MainWindow:
         self.plus_btn.connect("clicked", self.plus_button)
         self.images_btn.connect("clicked", self.show_images)
         self.container_btn.connect("clicked", self.show_container)
+        self.volume_btn.connect("clicked", self.show_volume)
+        self.show_container(self.container_btn)
         self.window.show_all()
 
     def define_components(self):
@@ -45,7 +48,7 @@ class MainWindow:
 
         # windows
         self.images_window = self.builder.get_object("images_window")
-        self.containerappwindow = self.builder.get_object("containerappwindow")
+        self.containers_window = self.builder.get_object("containers_window")
 
         # lists
         self.images_list = self.builder.get_object("images_list")
@@ -72,23 +75,31 @@ class MainWindow:
     def onDestroy(self, widget):
         Gtk.main_quit()
 
+    def update_stack_button(self,widget):
+        self.images_btn.set_sensitive(True)
+        self.container_btn.set_sensitive(True)
+        self.volume_btn.set_sensitive(True)
+        widget.set_sensitive(False)
+
     def show_images(self, widget):
         self.main_stack.set_visible_child_name("images_page")
+        self.update_stack_button(widget)
 
     def show_container(self, widget):
-        self.main_stack.set_visible_child_name("container_page")
+        self.main_stack.set_visible_child_name("containers_page")
+        self.update_stack_button(widget)
 
     def show_volume(self, widget):
-        # self.main_stack.set_visible_child_name("container_page")
-        pass
+        self.main_stack.set_visible_child_name("volumes_page")
+        self.update_stack_button(widget)
 
     def plus_button(self, widget):
         if "images_page" == self.main_stack.get_visible_child_name():
             self.images_window.set_application()
             self.images_window.show()
-        elif "container_page" == self.main_stack.get_visible_child_name():
-            self.imagesappwindow.set_application()
-            self.imagesappwindow.show()
+        elif "containers_page" == self.main_stack.get_visible_child_name():
+            self.containers_window.set_application()
+            self.containers_window.show()
         else:
             pass
 
