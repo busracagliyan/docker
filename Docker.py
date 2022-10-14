@@ -52,7 +52,8 @@ class container:
 class docker:
     def __init__(self):
         self.available = True
-        if os.system("docker --version >/dev/null") != 0:
+        print(os.system("~/bin/docker --version >/dev/null"))
+        if os.system("~/bin/docker --version >/dev/null") != 0:
             self.available = False
 
     def list_containers(self):
